@@ -1,0 +1,16 @@
+Django==1.11.2
+django-crispy-forms==1.6.1
+gunicorn==19.7.1
+olefile==0.44
+Pillow==4.1.1
+psycopg2==2.7.1
+pytz==2017.2
+
+# Background Workers
+redis==2.10.5
+celery==3.1.23
+
+# REST
+djangorestframework==3.6.0
+markdown==2.6
+djangorestframework-jwt==1.10

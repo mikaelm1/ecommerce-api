@@ -9,4 +9,4 @@ cd src
 # ls core/
 pwd  
 # run Celery worker for our project myproject with Celery configuration stored in Celeryconf
-# celery worker -A ecommerce.celery -l info
+celery worker -A ecommerce.celery -l info

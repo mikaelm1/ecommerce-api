@@ -15,8 +15,10 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
+from rest_framework.documentation import include_docs_urls
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^auth/', include('authentication.urls'), name='auth'),
+    url(r'^docs/', include_docs_urls(title='Ecommerce API')),
+    url(r'^auth/', include('authentication.urls', namespace='auth')),
 ]

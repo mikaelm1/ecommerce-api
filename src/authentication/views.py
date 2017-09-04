@@ -1,4 +1,6 @@
 from rest_framework.views import APIView
+from rest_framework.compat import coreapi, coreschema
+from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
@@ -10,6 +12,36 @@ from django.shortcuts import redirect, render
 from .models import User
 from .tasks import send_acct_confirm_email
 from .tokens import account_activation_token
+from .serializers import UserCreateSerializer
+
+
+class Dummy(APIView):
+    """
+    get: A dummy view
+    """
+    serializer_class = UserCreateSerializer
+
+    def post(self, req):
+        return Response({'ef': 'wfr'})
+
+    def get_param_fields(self, view):
+        fields = [
+            coreapi.Field(
+                name='my_field',
+                required=True,
+                location='query',
+                schema=coreschema.String(
+                    title='My awesome field',
+                    description='This is my really awesome field right here, so awesome'
+                )
+            ),
+        ]
+        return fields
+
+    def get_serializer(self):
+        print('inside get serializer')
+        print(UserCreateSerializer.fields)
+        return UserCreateSerializer()
 
 
 class LoginView(APIView):
@@ -38,6 +70,11 @@ class LoginView(APIView):
             token = jwt_encode_handler(payload)
             return Response({'user': user.to_json(), 'token': token})
         return Response({'error': 'Invalid login credentials.'}, status=401)
+
+    # def get_serializer(self):
+    #     print('inside get serializer')
+    #     print(UserCreateSerializer.fields)
+    #     return UserCreateSerializer()
 
 
 class UserRegister(APIView):

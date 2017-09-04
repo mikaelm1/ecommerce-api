@@ -6,7 +6,8 @@ def validate_email(value):
     print('validating email')
 
 
-class UserCreateSerializer(serializers.ModelSerializer):
+class UserCreateSerializer(serializers.Serializer):
+    # dummy = serializers.Charfield()
     class Meta:
         model = User
         fields = ('email', 'password', 'username')

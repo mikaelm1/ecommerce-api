@@ -16,9 +16,13 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.contrib import admin
 from rest_framework.documentation import include_docs_urls
+from rest_framework_swagger.views import get_swagger_view
+
+schema_view = get_swagger_view(title='Ecommerce API')
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^docs/', include_docs_urls(title='Ecommerce API')),
+    url(r'^', include_docs_urls(title='Ecommerce API')),
+    # url(r'^$', schema_view),
     url(r'^auth/', include('authentication.urls', namespace='auth')),
 ]

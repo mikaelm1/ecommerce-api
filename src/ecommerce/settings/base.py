@@ -15,8 +15,8 @@ import datetime
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-print("BASE_DIR: {}".format(BASE_DIR))
-print(os.path.join(BASE_DIR, 'templates'))
+# print("BASE_DIR: {}".format(BASE_DIR))
+# print(os.path.join(BASE_DIR, 'templates'))
 
 
 # Quick-start development settings - unsuitable for production
@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     # Third party
     'rest_framework',
     'rest_framework.authtoken',
+    'rest_framework_swagger',
     # Custom apps
     'authentication',
 ]
@@ -117,11 +118,20 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
     ),
+    # 'DEFAULT_FILTER_BACKENDS': (
+    #     # 'rest_framework.DjangoFilterBackend',
+    #     'ecommerce.param_schema.ParamSchemaFilter',
+    #     )
 }
 
 JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=300),
 }
+
+SWAGGER_SETTINGS = {
+    'JSON_EDITOR': True
+}
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/

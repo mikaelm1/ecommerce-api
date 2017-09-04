@@ -23,3 +23,5 @@ __pycache__
 src/ecommerce/settings/prod.py
 src/ecommerce/settings/dev.py
 docker-compose.prod.yml
+# The static folder created from: `manage.py collectstatic`
+static/*

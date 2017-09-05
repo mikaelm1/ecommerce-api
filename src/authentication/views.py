@@ -15,35 +15,6 @@ from .tokens import account_activation_token
 from .serializers import UserCreateSerializer
 
 
-class Dummy(APIView):
-    """
-    get: A dummy view
-    """
-    serializer_class = UserCreateSerializer
-
-    def post(self, req):
-        return Response({'ef': 'wfr'})
-
-    def get_param_fields(self, view):
-        fields = [
-            coreapi.Field(
-                name='my_field',
-                required=True,
-                location='query',
-                schema=coreschema.String(
-                    title='My awesome field',
-                    description='This is my really awesome field right here, so awesome'
-                )
-            ),
-        ]
-        return fields
-
-    def get_serializer(self):
-        print('inside get serializer')
-        print(UserCreateSerializer.fields)
-        return UserCreateSerializer()
-
-
 class LoginView(APIView):
     """
     post:

@@ -25,4 +25,5 @@ urlpatterns = [
     url(r'^', include_docs_urls(title='Ecommerce API')),
     # url(r'^$', schema_view),
     url(r'^auth/', include('authentication.urls', namespace='auth')),
+    url(r'^items/', include('items.urls', namespace='items')),
 ]

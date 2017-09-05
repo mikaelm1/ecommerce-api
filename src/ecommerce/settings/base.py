@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'rest_framework_swagger',
     # Custom apps
     'authentication',
+    'items',
 ]
 
 MIDDLEWARE = [
@@ -125,7 +126,7 @@ REST_FRAMEWORK = {
 }
 
 JWT_AUTH = {
-    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=300),
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=864000),
 }
 
 SWAGGER_SETTINGS = {

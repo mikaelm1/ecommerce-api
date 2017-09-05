@@ -1,5 +1,6 @@
 from django.db import models
 from authentication.models import User
+from carts.models import Cart
 
 
 class Item(models.Model):
@@ -11,6 +12,7 @@ class Item(models.Model):
                                 blank=False, null=False)
     seller = models.ForeignKey(User, on_delete=models.CASCADE)
     on_sale = models.BooleanField(default=True)
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, blank=True, null=True)
 
     class Meta:
         db_table = 'items'

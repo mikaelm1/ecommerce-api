@@ -82,43 +82,90 @@ class UserRegister(APIView):
         return Response({'user': user.to_json()})
 
 
-class ConfirmAcct(View):
+class ConfirmAccountView(APIView):
+    """
+    Confirm user's email account.
+    """
     def get(self, req):
-        confirmed = False
         token = req.GET.get('token')
-        uid = int(float(req.GET.get('uid')) / settings.EMAIL_CONFIRM_HASH_NUM)
+        uid = None
+        try:
+            uid = int(int(req.GET.get('uid')) / settings.EMAIL_CONFIRM_HASH_NUM)
+        except TypeError:
+            return Response({'error': 'uid must be an integer.'}, status=400)
+        print(token, uid)
         if token and uid:
             user = User.objects.filter(id=uid).first()
             if user is None:
-                confirmed = False
+                return Response({'error': 'User account not found'},
+                                status=404)
             elif user.email_verified:
-                print('Email is already verified')
-                confirmed = True
+                return Response({'error': 'User email is already verified.'},
+                                status=400)
             else:
                 if account_activation_token.check_token(user, token):
                     user.email_verified = True
                     user.save()
-                    confirmed = True
-        return render(req, 'auth/confirm.html',
-                      {'confirmed': confirmed, 'uid': uid})
+                    return Response({'user': user.to_json()})
+                return Response({'error': 'Invalid token.'}, status=400)
+        return Response({'error': 'Invalid request data.'}, status=400)
 
 
-class ResendConfirmEmail(View):
-    def get(self, req, *args):
-        # TODO: redirect to front end app
+class ResendConfirmEmailView(APIView):
+    def get(self, req):
         uid = req.GET.get('uid')
         user = User.objects.filter(id=uid).first()
-        print(uid)
-        print(user)
         if user is None:
-            print('User not found')
+            return Response({'error': 'Invalid user id.'}, status=404)
         elif user.email_verified:
-            print('email already confirmed')
-            return redirect('/')
+            return Response({'error': 'User email already verified.'},
+                            status=400)
         else:
             url = req.build_absolute_uri('/auth/confirm-email')
             uid = user.id * settings.EMAIL_CONFIRM_HASH_NUM
             token = account_activation_token.make_token(user)
             url += '?token={}&uid={}'.format(token, uid)
             send_acct_confirm_email.delay(user.id, url)
-        return redirect('/')
+            return Response({'message': 'Confirmation email sent.'})
+
+
+# class ConfirmAcct(View):
+#     def get(self, req):
+#         confirmed = False
+#         token = req.GET.get('token')
+#         uid = int(float(req.GET.get('uid')) / settings.EMAIL_CONFIRM_HASH_NUM)
+#         if token and uid:
+#             user = User.objects.filter(id=uid).first()
+#             if user is None:
+#                 confirmed = False
+#             elif user.email_verified:
+#                 print('Email is already verified')
+#                 confirmed = True
+#             else:
+#                 if account_activation_token.check_token(user, token):
+#                     user.email_verified = True
+#                     user.save()
+#                     confirmed = True
+#         return render(req, 'auth/confirm.html',
+#                       {'confirmed': confirmed, 'uid': uid})
+
+
+# class ResendConfirmEmail(View):
+#     def get(self, req, *args):
+#         # TODO: redirect to front end app
+#         uid = req.GET.get('uid')
+#         user = User.objects.filter(id=uid).first()
+#         print(uid)
+#         print(user)
+#         if user is None:
+#             print('User not found')
+#         elif user.email_verified:
+#             print('email already confirmed')
+#             return redirect('/')
+#         else:
+#             url = req.build_absolute_uri('/auth/confirm-email')
+#             uid = user.id * settings.EMAIL_CONFIRM_HASH_NUM
+#             token = account_activation_token.make_token(user)
+#             url += '?token={}&uid={}'.format(token, uid)
+#             send_acct_confirm_email.delay(user.id, url)
+#         return redirect('/')

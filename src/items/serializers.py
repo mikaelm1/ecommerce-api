@@ -15,3 +15,12 @@ class ItemCreateSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         return data
+
+
+class ItemUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Item
+        fields = ('title', 'notes', 'price', 'on_sale')
+
+    def validate(self, data):
+        return data

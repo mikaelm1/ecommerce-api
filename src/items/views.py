@@ -1,7 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Item
-from .serializers import ItemSerializer, ItemCreateSerializer
+from .serializers import (
+    ItemSerializer, ItemCreateSerializer, ItemUpdateSerializer
+)
 
 
 class ItemsView(APIView):
@@ -27,4 +29,32 @@ class ItemsView(APIView):
             serializer.save()
             return Response(ItemCreateSerializer(serializer.instance).data,
                             status=201)
+        return Response({'errors': serializer.errors}, status=400)
+
+
+class ItemDetailView(APIView):
+    """
+    get:
+    Returns an item details
+    put:
+    Update an item
+    """
+    def get(self, req, id):
+        item = Item.objects.filter(id=id).first()
+        if item is None:
+            return Response({'error': 'Item not found'}, status=404)
+        return Response(ItemSerializer(item).data)
+
+    def put(self, req, id):
+        if req.user.is_staff is False:
+            return Response({'error': 'Only admins allowed to edit items'},
+                            status=401)
+        item = Item.objects.filter(id=id).first()
+        if item is None:
+            return Response({'error': 'Item not found'}, status=404)
+        data = req.data
+        serializer = ItemUpdateSerializer(item, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(ItemSerializer(item).data)
         return Response({'errors': serializer.errors}, status=400)

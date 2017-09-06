@@ -7,7 +7,7 @@ class ItemInventory(models.Model):
     amount = models.IntegerField(default=1)
 
     def __str__(self):
-        return str(self.id)
+        return "ID {} has {} items".format(self.id, self.item_set.count())
 
 
 class Item(models.Model):
@@ -27,4 +27,4 @@ class Item(models.Model):
         db_table = 'items'
 
     def __str__(self):
-        return self.title
+        return "{} with id {}".format(self.title, self.id)

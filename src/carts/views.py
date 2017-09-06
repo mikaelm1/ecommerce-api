@@ -6,6 +6,14 @@ from .models import Cart
 from items.models import Item, ItemInventory
 from .serializers import CartSerializer
 
+"""
+Cart Flow:
+Each item belongs to an Inventory. On adding an item to a cart, item's
+on_sale property is set to False and its inventory's amount property is
+decremented by one. Removing an item from a cart sets the item's on_sale
+property to True and increments the item's inventory amount by one.
+"""
+
 
 class CartDetailView(APIView):
     """
@@ -37,7 +45,7 @@ class AddItemToCartView(APIView):
         inv = ItemInventory.objects.filter(id=d.get('inventory_id')).first()
         if inv is None:
             return Response({'error': 'Item not found.'}, status=404)
-        items = inv.item_set
+        items = inv.item_set.filter(on_sale=True)
         if items.count() <= 0:
             return Response({'error': 'Item is out of stock.'}, status=404)
         cart = req.user.cart
@@ -48,7 +56,7 @@ class AddItemToCartView(APIView):
         cart.item_set.add(item)
         inv.amount -= 1
         inv.save()
-        items.remove(item)
+        # items.remove(item)
         return Response(cart.to_json())
 
 
@@ -66,13 +74,26 @@ class EditCartView(APIView):
         d = req.data
         items = d.get('items')
         cart_items = cart.item_set
+        items_to_remove = []
         for i in cart_items.all():
             if i.id in items:
                 # print('got id: {}'.format(i.id))
-                cart_items.remove(i)
+                i.inventory.amount += 1
+                i.inventory.save()
+                i.on_sale = True
+                i.save()
+                items_to_remove.append(i)
+        for i in items_to_remove:
+            cart_items.remove(i)
         return Response(cart.to_json())
 
     def delete(self, req):
         cart = req.user.cart
-        cart.item_set.clear()
+        cart_items = cart.item_set
+        for i in cart_items.all():
+            i.inventory.amount += 1
+            i.inventory.save()
+            i.on_sale = True
+            i.save()
+        cart_items.clear()
         return Response(cart.to_json())

@@ -7,12 +7,11 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
 from django.db.models import Q
 from django.conf import settings
-from django.views import View
-from django.shortcuts import redirect, render
 from .models import User
 from .tasks import send_acct_confirm_email
 from .tokens import account_activation_token
 from .serializers import UserCreateSerializer
+from carts.models import Cart
 
 
 class LoginView(APIView):
@@ -74,6 +73,11 @@ class UserRegister(APIView):
                              .format(settings.MIN_PASSWORD_LENGTH)})
         user = User.objects.create_user(username=username, email=email,
                                         password=pwd)
+        if user is None:
+            return Response({'error': 'There was an error creating the user.'},
+                            status=500)
+        cart = Cart(user=user)
+        cart.save()
         url = req.build_absolute_uri('/auth/confirm-email')
         uid = user.id * settings.EMAIL_CONFIRM_HASH_NUM
         token = account_activation_token.make_token(user)

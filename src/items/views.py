@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Item
+from .models import Item, ItemInventory
 from .serializers import (
     ItemSerializer, ItemCreateSerializer, ItemUpdateSerializer
 )
@@ -11,7 +11,7 @@ class ItemsView(APIView):
     get:
     Returns all items available for sale.
     post:
-    Create a new item.
+    Create a new item. Add it to inventory.
     """
     def get(self, req):
         items = Item.objects.filter(on_sale=True)
@@ -24,10 +24,21 @@ class ItemsView(APIView):
                             status=401)
         data = req.data
         data['seller'] = req.user.id
+        try:
+            inv_id = int(data.get('inventory_id'))
+        except:
+            inv_id = None
+        inv = ItemInventory.objects.filter(id=inv_id).first()
+        if inv is None:
+            print('Inv is None')
+            inv = ItemInventory.objects.create(amount=1)
         serializer = ItemCreateSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
-            return Response(ItemCreateSerializer(serializer.instance).data,
+            inv.item_set.add(serializer.instance)
+            inv.amount = inv.item_set.count()
+            inv.save()
+            return Response(ItemSerializer(serializer.instance).data,
                             status=201)
         return Response({'errors': serializer.errors}, status=400)
 

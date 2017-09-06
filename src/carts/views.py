@@ -9,9 +9,11 @@ from .serializers import CartSerializer
 """
 Cart Flow:
 Each item belongs to an Inventory. On adding an item to a cart, item's
-on_sale property is set to False and its inventory's amount property is
-decremented by one. Removing an item from a cart sets the item's on_sale
-property to True and increments the item's inventory amount by one.
+on_sale property is set to False. Removing an item from a cart sets the item's
+on_sale property to True. Checking out a cart deletes all items in the cart
+and decrements each item's inventory by one for each item. An item's inventory's
+amount property represents all the items it has, including ones that have on_sale
+set to False.
 """
 
 
@@ -54,8 +56,8 @@ class AddItemToCartView(APIView):
         item.on_sale = False
         item.save()
         cart.item_set.add(item)
-        inv.amount -= 1
-        inv.save()
+        # inv.amount -= 1
+        # inv.save()
         # items.remove(item)
         return Response(cart.to_json())
 
@@ -78,8 +80,8 @@ class EditCartView(APIView):
         for i in cart_items.all():
             if i.id in items:
                 # print('got id: {}'.format(i.id))
-                i.inventory.amount += 1
-                i.inventory.save()
+                # i.inventory.amount += 1
+                # i.inventory.save()
                 i.on_sale = True
                 i.save()
                 items_to_remove.append(i)
@@ -96,4 +98,23 @@ class EditCartView(APIView):
             i.on_sale = True
             i.save()
         cart_items.clear()
+        return Response(cart.to_json())
+
+
+class CheckoutView(APIView):
+    """
+    put:
+    Purchase all items in user's cart.
+    """
+    permission_classes = (IsAuthenticated,)
+
+    def put(self, req):
+        # TODO: once payments implemented, charge user's credit card
+        cart = req.user.cart
+        items = cart.item_set
+        for i in items.all():
+            i.inventory.amount -= 1
+            i.inventory.save()
+        items.all().delete()
+        # print(items.all())
         return Response(cart.to_json())

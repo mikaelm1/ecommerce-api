@@ -50,3 +50,29 @@ class AddItemToCartView(APIView):
         inv.save()
         items.remove(item)
         return Response(cart.to_json())
+
+
+class EditCartView(APIView):
+    """
+    put:
+    Remove specific items from cart.
+    delete:
+    Remove all items from the cart.
+    """
+    permission_classes = (IsAuthenticated,)
+
+    def put(self, req):
+        cart = req.user.cart
+        d = req.data
+        items = d.get('items')
+        cart_items = cart.item_set
+        for i in cart_items.all():
+            if i.id in items:
+                # print('got id: {}'.format(i.id))
+                cart_items.remove(i)
+        return Response(cart.to_json())
+
+    def delete(self, req):
+        cart = req.user.cart
+        cart.item_set.clear()
+        return Response(cart.to_json())

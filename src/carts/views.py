@@ -3,7 +3,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from authentication.models import User
 from .models import Cart
-from items.models import Item
+from items.models import Item, ItemInventory
+from .serializers import CartSerializer
 
 
 class CartDetailView(APIView):
@@ -20,7 +21,8 @@ class CartDetailView(APIView):
         cart = user.cart
         items = cart.item_set.all()
         items = [i.id for i in items]
-        return Response({'id': cart.id, 'user': cart.user.id, 'itmes': items})
+        # print(cart.to_json())
+        return Response(cart.to_json())
 
 
 class AddItemToCartView(APIView):
@@ -32,15 +34,19 @@ class AddItemToCartView(APIView):
 
     def put(self, req):
         d = req.data
-        item = Item.objects.filter(id=d.get('item_id')).first()
-        if item is None:
+        inv = ItemInventory.objects.filter(id=d.get('inventory_id')).first()
+        if inv is None:
             return Response({'error': 'Item not found.'}, status=404)
+        items = inv.item_set
+        if items.count() <= 0:
+            return Response({'error': 'Item is out of stock.'}, status=404)
         cart = req.user.cart
-        cart.item_set.add(item)
-        item.inventory -= 1
+        item = items.first()
+        item.cart = cart
+        item.on_sale = False
         item.save()
-        cart.save()
-        print(cart.item_set.all())
-        if item.inventory <= 0:
-            item.delete()
-        return Response({})
+        cart.item_set.add(item)
+        inv.amount -= 1
+        inv.save()
+        items.remove(item)
+        return Response(cart.to_json())

@@ -7,3 +7,11 @@ class Cart(models.Model):
 
     def __str__(self):
         return "{}'s Cart".format(self.user.username)
+
+    def to_json(self):
+        res = {
+            'id': self.id,
+            'user_id': self.user.id,
+            'items': [i.id for i in self.item_set.all()]
+        }
+        return res

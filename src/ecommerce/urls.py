@@ -16,14 +16,15 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.contrib import admin
 from rest_framework.documentation import include_docs_urls
-from rest_framework_swagger.views import get_swagger_view
+import rest_framework_swagger
+# from rest_framework_swagger.views import get_swagger_view
 
-schema_view = get_swagger_view(title='Ecommerce API')
+# schema_view = get_swagger_view(title='Ecommerce API')
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    # url(r'^', include_docs_urls(title='Ecommerce API')),
-    url(r'^$', schema_view),
+    url(r'^', include_docs_urls(title='Ecommerce API')),
+    # url(r'^$', schema_view),
     url(r'^auth/', include('authentication.urls', namespace='auth')),
     url(r'^items/', include('items.urls', namespace='items')),
     url(r'^carts/', include('carts.urls', namespace='carts')),

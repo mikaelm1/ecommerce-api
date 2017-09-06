@@ -11,7 +11,8 @@ class ItemSerializer(serializers.ModelSerializer):
 class ItemCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Item
-        fields = ('title', 'notes', 'price', 'seller', 'on_sale')
+        fields = ('title', 'notes', 'price', 'seller', 'on_sale', 'inventory')
+        # depth = 2
 
     def validate(self, data):
         return data

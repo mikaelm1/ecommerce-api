@@ -5,7 +5,7 @@ from .views import (
 
 
 urlpatterns = [
-    url(r'^cart/(?P<uid>\d+)$', CartDetailView.as_view(), name='detail'),
+    url(r'^cart$', CartDetailView.as_view(), name='detail'),
     url(r'^add-item$', AddItemToCartView.as_view(), name='add-item'),
     url(r'^edit$', EditCartView.as_view(), name='edit'),
     url(r'^checkout$', CheckoutView.as_view(), name='checkout'),

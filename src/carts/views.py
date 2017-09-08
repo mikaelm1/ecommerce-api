@@ -10,10 +10,11 @@ from .serializers import CartSerializer
 Cart Flow:
 Each item belongs to an Inventory. On adding an item to a cart, item's
 on_sale property is set to False. Removing an item from a cart sets the item's
-on_sale property to True. Checking out a cart deletes all items in the cart
-and decrements each item's inventory by one for each item. An item's inventory's
-amount property represents all the items it has, including ones that have on_sale
-set to False.
+on_sale property to True. Checking out a cart removes all items in the cart,
+decrements each item's inventory by one for each item, and removes the item
+from the inventory. An item's inventory's amount property represents all the
+items it has, including ones that have on_sale set to False, but not those
+already sold.
 """
 
 
@@ -31,7 +32,6 @@ class CartDetailView(APIView):
         cart = user.cart
         items = cart.item_set.all()
         items = [i.id for i in items]
-        # print(cart.to_json())
         return Response(cart.to_json())
 
 
@@ -56,9 +56,6 @@ class AddItemToCartView(APIView):
         item.on_sale = False
         item.save()
         cart.item_set.add(item)
-        # inv.amount -= 1
-        # inv.save()
-        # items.remove(item)
         return Response(cart.to_json())
 
 
@@ -74,14 +71,11 @@ class EditCartView(APIView):
     def put(self, req):
         cart = req.user.cart
         d = req.data
-        items = d.get('items')
+        items = d.get('items', [])
         cart_items = cart.item_set
         items_to_remove = []
         for i in cart_items.all():
             if i.id in items:
-                # print('got id: {}'.format(i.id))
-                # i.inventory.amount += 1
-                # i.inventory.save()
                 i.on_sale = True
                 i.save()
                 items_to_remove.append(i)
@@ -93,8 +87,6 @@ class EditCartView(APIView):
         cart = req.user.cart
         cart_items = cart.item_set
         for i in cart_items.all():
-            i.inventory.amount += 1
-            i.inventory.save()
             i.on_sale = True
             i.save()
         cart_items.clear()
@@ -113,8 +105,11 @@ class CheckoutView(APIView):
         cart = req.user.cart
         items = cart.item_set
         for i in items.all():
-            i.inventory.amount -= 1
-            i.inventory.save()
-        items.all().delete()
-        # print(items.all())
+            i.buyer = req.user
+            i.save()
+            inv = i.inventory
+            inv.amount -= 1
+            inv.item_set.remove(i)
+            inv.save()
+        items.clear()
         return Response(cart.to_json())

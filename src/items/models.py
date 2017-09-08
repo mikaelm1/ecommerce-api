@@ -18,6 +18,8 @@ class Item(models.Model):
     price = models.DecimalField(max_digits=15, decimal_places=2,
                                 blank=False, null=False)
     seller = models.ForeignKey(User, on_delete=models.CASCADE)
+    buyer = models.ForeignKey(User, default=None, related_name='items_bought',
+                              blank=True, null=True)
     on_sale = models.BooleanField(default=True)
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, blank=True,
                              null=True)

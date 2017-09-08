@@ -28,4 +28,5 @@ urlpatterns = [
     url(r'^auth/', include('authentication.urls', namespace='auth')),
     url(r'^items/', include('items.urls', namespace='items')),
     url(r'^carts/', include('carts.urls', namespace='carts')),
+    url(r'^billings/', include('billings.urls', namespace='billings')),
 ]

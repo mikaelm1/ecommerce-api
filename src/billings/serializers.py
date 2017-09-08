@@ -8,8 +8,9 @@ class CreditCardSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-
-class CreateCreditCardSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CreditCard
-        fields = ('name', 'last_four', 'expiration_date', 'user')
+class CreateCreditCardSerializer(serializers.Serializer):
+    exp_month = serializers.IntegerField()
+    exp_year = serializers.IntegerField()
+    card_number = serializers.CharField()
+    stripe_token = serializers.CharField()
+    cvc = serializers.IntegerField()

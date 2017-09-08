@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from ecommerce.permissions import EmailConfirmed
 from .utils_stripe import StripeWrapper
 from .models import CreditCard
-from .serializers import CreditCardSerializer
+from .serializers import CreditCardSerializer, CreateCreditCardSerializer
 
 """
 Stripe Testing Credit Card Numbers:
@@ -23,6 +23,9 @@ class CreateCreditCardView(APIView):
 
     def post(self, req):
         d = req.data
+        ser = CreateCreditCardSerializer(data=d)
+        if ser.is_valid() is False:
+            return Response({'error': ser.errors})
         # User can only have one credit card for now.
         if req.user.creditcard_set.count() > 0:
             return Response({'error':
@@ -30,12 +33,14 @@ class CreateCreditCardView(APIView):
                             status=401)
         if req.user.stripe_id is None:
             client = StripeWrapper()
-            created, res = client.create_customer(user=req.user,
-                                                  exp_month=d.get('exp_month'),
-                                                  exp_year=d.get('exp_year'),
-                                                  number=d.get('card_number'),
-                                                  cvc=d.get('cvc'),
-                                                  token=d.get('stripe_token'))
+            created, res = client.create_customer(
+                user=req.user,
+                exp_month=ser.data.get('exp_month'),
+                exp_year=ser.data.get('exp_year'),
+                number=ser.data.get('card_number'),
+                cvc=ser.data.get('cvc'),
+                token=ser.data.get('stripe_token')
+            )
             if created:
                 req.user.stripe_id = res.get('customer_id')
                 req.user.save()

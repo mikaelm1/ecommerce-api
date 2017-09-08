@@ -18,6 +18,9 @@ lib
 lib64
 __pycache__
 
+# Local Helpers
+notes.txt
+
 # Prod
 .env
 src/ecommerce/settings/prod.py

@@ -19,3 +19,6 @@ DATABASES = {
         'PORT': '5432',
     }
 }
+
+STRIPE_SECRET_KEY = 'sk_test_xxx'
+STRIPE_PUBLISHABLE_KEY = 'pk_test_xxx'

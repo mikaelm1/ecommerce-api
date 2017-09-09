@@ -1,6 +1,7 @@
 from django.db import models
 from authentication.models import User
 from carts.models import Cart
+from billings.models import PurchaseReceipt
 
 
 class ItemInventory(models.Model):
@@ -30,3 +31,19 @@ class Item(models.Model):
 
     def __str__(self):
         return "{} with id {}".format(self.title, self.id)
+
+
+class PurchasedItem(models.Model):
+    TRANSIT_STATUS = (
+        # value, label
+        ('Preparing', 'Preparing'),
+        ('InTransit', 'InTransit'),
+        ('Delivered', 'Delivered'),
+    )
+    item = models.OneToOneField(Item, on_delete=models.CASCADE)
+    purchase_receipt = models.ForeignKey(PurchaseReceipt,
+                                         on_delete=models.CASCADE)
+    transit_status = models.CharField(
+        max_length=40, choices=TRANSIT_STATUS,
+        blank=False, null=False, default=TRANSIT_STATUS[0][0]
+    )

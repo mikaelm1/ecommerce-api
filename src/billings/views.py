@@ -5,7 +5,7 @@ from ecommerce.permissions import EmailConfirmed
 from .utils_stripe import StripeWrapper
 from .models import CreditCard
 from .serializers import (
-    CreditCardSerializer, CreateCreditCardSerializer, EditCreditCardSerializer
+    CreditCardSerializer, CreateCreditCardSerializer
 )
 
 """

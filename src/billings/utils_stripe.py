@@ -13,8 +13,7 @@ def handle_stripe_errors(f):
             return f(*args, **kwargs)
         except stripe.error.CardError as e:
             print(e)
-            msg = 'Card was declined.'
-            return False, msg
+            return False, e._message
         except stripe.error.InvalidRequestError as e:
             return False, e
         except stripe.error.AuthenticationError:
@@ -56,3 +55,20 @@ class StripeWrapper:
             'last_four': card['last4'],
         }
         return True, res
+
+    @handle_stripe_errors
+    def update_card(self, user, card, exp_month=None, exp_year=None):
+        """
+        Update user's credit card.
+        """
+        customer = stripe.Customer.retrieve(user.stripe_id)
+        c = customer.sources.retrieve(card.stripe_id)
+        if exp_month:
+            c.exp_month = exp_month
+            card.exp_month = exp_month
+        if exp_year:
+            c.exp_year = exp_year
+            card.exp_year = exp_year
+        c.save()
+        card.save()
+        return True, card

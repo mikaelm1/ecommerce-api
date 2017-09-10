@@ -32,6 +32,12 @@ class Item(models.Model):
     def __str__(self):
         return "{} with id {}".format(self.title, self.id)
 
+    def price_in_cents(self):
+        """
+        Returns the price of the item in cents.
+        """
+        return int(self.price * 100)
+
 
 class PurchasedItem(models.Model):
     TRANSIT_STATUS = (

@@ -2,7 +2,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from ecommerce.permissions import EmailConfirmed
-from items.models import ItemInventory
+from items.models import ItemInventory, PurchasedItem
+from billings.utils_stripe import StripeWrapper
+from billings.models import PurchaseReceipt
 
 """
 Cart Flow:
@@ -96,15 +98,54 @@ class CheckoutView(APIView):
     permission_classes = (IsAuthenticated, EmailConfirmed,)
 
     def put(self, req):
-        # TODO: once payments implemented, charge user's credit card
+        card = req.user.creditcard_set.first()
+        if card is None:
+            return Response({'error':
+                             'User does not have a credit card on file.'},
+                            status=400)
         cart = req.user.cart
         items = cart.item_set
+        if items.count() < 1:
+            return Response({'error':
+                             'User does not have any items in their cart.'},
+                            status=400)
+        charge_amount = 0
+        receipt = PurchaseReceipt(
+            user=req.user, brand=card.name, last_four=card.last_four,
+            exp_month=card.exp_month, exp_year=card.exp_year,
+            currency='usd', amount=charge_amount
+        )
+        receipt.save()
+        purch_items = []
         for i in items.all():
             i.buyer = req.user
             i.save()
-            inv = i.inventory
-            inv.amount -= 1
-            inv.item_set.remove(i)
-            inv.save()
-        items.clear()
+            charge_amount += i.price_in_cents()
+            purch_item = PurchasedItem(
+                item=i, purchase_receipt=receipt
+            )
+            purch_items.append(purch_item)
+            purch_item.save()
+        client = StripeWrapper()
+        charged, res = client.make_purchase(
+            user=req.user, amount=charge_amount,
+            description='Payment for {} items'.format(items.count())
+        )
+        if charged:
+            receipt.amount = charge_amount
+            receipt.stripe_id = res.get('id')
+            receipt.save()
+            for i in items.all():
+                i.buyer = req.user
+                i.save()
+                inv = i.inventory
+                inv.amount -= 1
+                inv.item_set.remove(i)
+                inv.save()
+            items.clear()
+        else:
+            receipt.delete()
+            for p in purch_items:
+                p.delete()
+            return Response({'error': res}, status=400)
         return Response(cart.to_json())

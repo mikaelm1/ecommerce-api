@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Item
+from .models import Item, PurchasedItem
 
 
 class ItemSerializer(serializers.ModelSerializer):
@@ -25,3 +25,9 @@ class ItemUpdateSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         return data
+
+
+class PurchasedItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PurchasedItem
+        fields = '__all__'

@@ -14,6 +14,11 @@ class CreditCard(models.Model):
         return "{} for user {}".format(self.name, self.user)
 
 
+class PurchaseReceiptManager(models.Manager):
+    def find_by_id(self, id):
+        return self.filter(id=id).first()
+
+
 class PurchaseReceipt(models.Model):
     # Relationships
     # A relationship to PurchasedItems exists
@@ -29,6 +34,11 @@ class PurchaseReceipt(models.Model):
     # The sum of all items purchased at the time
     amount = models.IntegerField()
     created = models.DateTimeField(auto_now_add=True)
+    # Manager
+    objects = PurchaseReceiptManager()
 
     def __str__(self):
         return "ID {} for {}".format(self.id, self.user.email)
+
+    def get_items(self):
+        return self.purchaseditem_set.all()

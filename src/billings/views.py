@@ -2,8 +2,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from ecommerce.permissions import EmailConfirmed
+from items.serializers import PurchasedItemSerializer
 from .utils_stripe import StripeWrapper
-from .models import CreditCard
+from .models import CreditCard, PurchaseReceipt
 from .serializers import (
     CreditCardSerializer, CreateCreditCardSerializer,
     PurchaseReceiptSerializer
@@ -115,3 +116,20 @@ class BillingHistoryView(APIView):
         receipts = req.user.purchasereceipt_set.all()
         return Response({'receipts':
                          PurchaseReceiptSerializer(receipts, many=True).data})
+
+
+class ReceiptDetailView(APIView):
+    """
+    get:
+    Return receipt details.
+    """
+    permission_classes = (IsAuthenticated, EmailConfirmed,)
+
+    def get(self, req, rid):
+        receipt = PurchaseReceipt.objects.find_by_id(rid)
+        if receipt.user != req.user:
+            return Response({'error': 'Can only view your own receipts.'},
+                            status=403)
+        items = receipt.get_items()
+        return Response({'receipt': PurchaseReceiptSerializer(receipt).data,
+                         'items': PurchasedItemSerializer(items, many=True).data})

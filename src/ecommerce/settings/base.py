@@ -121,6 +121,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
     ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 20
     # 'DEFAULT_FILTER_BACKENDS': (
     #     # 'rest_framework.DjangoFilterBackend',
     #     'ecommerce.param_schema.ParamSchemaFilter',

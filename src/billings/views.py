@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.pagination import LimitOffsetPagination
 from ecommerce.permissions import EmailConfirmed
 from items.serializers import PurchasedItemSerializer
 from .utils_stripe import StripeWrapper
@@ -114,8 +115,11 @@ class BillingHistoryView(APIView):
 
     def get(self, req):
         receipts = req.user.purchasereceipt_set.all()
-        return Response({'receipts':
-                         PurchaseReceiptSerializer(receipts, many=True).data})
+        paginator = LimitOffsetPagination()
+        paginated_receipts = paginator.paginate_queryset(receipts, req)
+        serialized = PurchaseReceiptSerializer(paginated_receipts, many=True)
+        return Response({'receipts': serialized.data,
+                         'total': receipts.count()})
 
 
 class ReceiptDetailView(APIView):

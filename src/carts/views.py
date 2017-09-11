@@ -110,44 +110,36 @@ class CheckoutView(APIView):
                              'User does not have any items in their cart.'},
                             status=400)
         charge_amount = 0
-        receipt = PurchaseReceipt(
-            user=req.user, brand=card.name, last_four=card.last_four,
-            exp_month=card.exp_month, exp_year=card.exp_year,
-            currency='usd', amount=charge_amount
-        )
-        receipt.save()
-        purch_items = []
         for i in items.all():
-            # i.buyer = req.user
-            # i.save()
             charge_amount += i.price_in_cents()
-            purch_item = PurchasedItem(
-                item=i, purchase_receipt=receipt
-            )
-            purch_items.append(purch_item)
-            purch_item.save()
         client = StripeWrapper()
         charged, res = client.make_purchase(
             user=req.user, amount=charge_amount,
             description='Payment for {} items'.format(items.count())
         )
         if charged:
-            receipt.amount = charge_amount
+            receipt = PurchaseReceipt(
+                user=req.user, brand=card.name, last_four=card.last_four,
+                exp_month=card.exp_month, exp_year=card.exp_year,
+                currency='usd', amount=charge_amount
+            )
             receipt.stripe_id = res.get('id')
             receipt.save()
             for i in items.all():
+                # set buyer on item
                 i.buyer = req.user
                 i.save()
+                # create purchase item object
+                purch_item = PurchasedItem(
+                    item=i, purchase_receipt=receipt
+                )
+                purch_item.save()
+                # adjust inventory
                 inv = i.inventory
                 inv.amount -= 1
                 inv.item_set.remove(i)
                 inv.save()
             items.clear()
         else:
-            # If credit card charge was unsuccessful, delete the receipt
-            # and all the purchase items
-            receipt.delete()
-            for p in purch_items:
-                p.delete()
             return Response({'error': res}, status=400)
         return Response(cart.to_json())

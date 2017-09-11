@@ -118,8 +118,8 @@ class CheckoutView(APIView):
         receipt.save()
         purch_items = []
         for i in items.all():
-            i.buyer = req.user
-            i.save()
+            # i.buyer = req.user
+            # i.save()
             charge_amount += i.price_in_cents()
             purch_item = PurchasedItem(
                 item=i, purchase_receipt=receipt
@@ -144,6 +144,8 @@ class CheckoutView(APIView):
                 inv.save()
             items.clear()
         else:
+            # If credit card charge was unsuccessful, delete the receipt
+            # and all the purchase items
             receipt.delete()
             for p in purch_items:
                 p.delete()

@@ -5,7 +5,8 @@ from ecommerce.permissions import EmailConfirmed
 from .utils_stripe import StripeWrapper
 from .models import CreditCard
 from .serializers import (
-    CreditCardSerializer, CreateCreditCardSerializer
+    CreditCardSerializer, CreateCreditCardSerializer,
+    PurchaseReceiptSerializer
 )
 
 """
@@ -101,3 +102,16 @@ class CreditCardView(APIView):
         if updated:
             return Response(CreditCardSerializer(res).data)
         return Response({'error': res}, status=401)
+
+
+class BillingHistoryView(APIView):
+    """
+    get:
+    Return user's purchase history.
+    """
+    permission_classes = (IsAuthenticated, EmailConfirmed,)
+
+    def get(self, req):
+        receipts = req.user.purchasereceipt_set.all()
+        return Response({'receipts':
+                         PurchaseReceiptSerializer(receipts, many=True).data})

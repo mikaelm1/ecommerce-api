@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CreditCard
+from .models import CreditCard, PurchaseReceipt
 
 
 class CreditCardSerializer(serializers.ModelSerializer):
@@ -14,3 +14,9 @@ class CreateCreditCardSerializer(serializers.Serializer):
     card_number = serializers.CharField()
     stripe_token = serializers.CharField()
     cvc = serializers.IntegerField()
+
+
+class PurchaseReceiptSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PurchaseReceipt
+        fields = '__all__'

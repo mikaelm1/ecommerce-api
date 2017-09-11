@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+
+  web:
+    command: bash -c "cd src && gunicorn ecommerce.wsgi:application -b 0.0.0.0:8000 --reload && cd .." 
+    ports:
+      - "8000:8000"
+
+  nginx:
+    restart: always
+    build: ./deploy/nginx
+    ports: 
+      - "8080:8080"
+    volumes:
+      - .:/app
+      - ./static:/static
+    depends_on:
+      - web
+    links:
+      - web:web

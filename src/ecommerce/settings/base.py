@@ -122,11 +122,15 @@ REST_FRAMEWORK = {
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 20
-    # 'DEFAULT_FILTER_BACKENDS': (
-    #     # 'rest_framework.DjangoFilterBackend',
-    #     'ecommerce.param_schema.ParamSchemaFilter',
-    #     )
+    'PAGE_SIZE': 20,
+    'DEFAULT_THROTTLE_CLASSES': (
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ),
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '3/second',
+        'user': '3/second'
+    }
 }
 
 JWT_AUTH = {
@@ -136,7 +140,6 @@ JWT_AUTH = {
 SWAGGER_SETTINGS = {
     'JSON_EDITOR': True
 }
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/

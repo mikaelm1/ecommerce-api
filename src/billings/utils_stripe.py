@@ -15,7 +15,8 @@ def handle_stripe_errors(f):
             print(e)
             return False, e._message
         except stripe.error.InvalidRequestError as e:
-            return False, e
+            print(e)
+            return False, e._message
         except stripe.error.AuthenticationError:
             msg = 'Stripe authentication failed.'
             return False, msg
@@ -26,7 +27,7 @@ def handle_stripe_errors(f):
             return 'Too many requests made to Stripe too quickly'
         except stripe.error.StripeError as e:
             print('got stripe error')
-            return False, e
+            return False, e._message
         except Exception as e:
             print(e)
             return False, 'Unknown error occured. Ensure all card details are provided.'
@@ -72,3 +73,16 @@ class StripeWrapper:
         c.save()
         card.save()
         return True, card
+
+    @handle_stripe_errors
+    def make_purchase(self, user, amount, description, currency='usd'):
+        """
+        Charge a user's credit card for a given amount.
+        """
+        charge = stripe.Charge.create(
+            amount=amount,
+            currency=currency,
+            customer=user.stripe_id,
+            description=description
+        )
+        return True, charge

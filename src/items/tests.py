@@ -62,3 +62,49 @@ class ItemsRoutesTests(BaseTests):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(len(res.data.get('items')), 1)
         self.assertEqual(res.data.get('items')[0].get('id'), item.id)
+
+    def test_item_detail_invalid(self):
+        url = '/items/item/100'
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 404)
+    
+    def test_item_detail_valid(self):
+        user = self.register_user(1)
+        item = self.create_item(1, user)
+        url = '/items/item/{}'.format(item.id)
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data.get('id'), item.id)
+
+    def test_item_edit_nonadmin(self):
+        user = self.register_user(1)
+        item = self.create_item(1, user)
+        url = '/items/item/{}'.format(item.id)
+        res = self.client.put(url)
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(res.data.get('error'),
+                         'Only admins allowed to edit items.')
+
+    def test_item_edit_invalid_id(self):
+        url = '/items/item/100'
+        user = self.register_user(1, is_staff=True)
+        self.auth_client(user)
+        res = self.client.put(url)
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(res.data.get('error'), 'Item not found.')
+
+    def test_item_edit_valid(self):
+        user = self.register_user(1, is_staff=True)
+        item = self.create_item(1, user, price=10)
+        url = '/items/item/{}'.format(item.id)
+        data = {
+            'title': 'New Title',
+            'notes': 'New Notes',
+            'price': 999.99
+        }
+        self.auth_client(user)
+        res = self.client.put(url, data)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data.get('title'), 'New Title')
+        self.assertEqual(res.data.get('notes'), 'New Notes')
+        self.assertEqual(res.data.get('price'), '999.99')

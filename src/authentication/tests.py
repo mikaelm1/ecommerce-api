@@ -10,7 +10,7 @@ from items.models import Item
 
 @override_settings(TESTING=True)
 class BaseTests(APITestCase):
-    def register_user(self, seed):
+    def register_user(self, seed, is_staff=False):
         """
         Helper to create a user object.
         :param seed: int
@@ -19,6 +19,8 @@ class BaseTests(APITestCase):
         email = '{}@example.com'.format(username)
         user = User(username=username, email=email)
         user.set_password('pass')
+        if is_staff:
+            user.is_staff = True
         user.save()
         return user
 

@@ -5,5 +5,5 @@ from .views import (
 
 urlpatterns = [
     url(r'^$', ItemsView.as_view(), name='index'),
-    url(r'^item/(?P<id>\d+)/$', ItemDetailView.as_view(), name='detail'),
+    url(r'^item/(?P<id>\d+)$', ItemDetailView.as_view(), name='detail'),
 ]

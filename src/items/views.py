@@ -53,16 +53,16 @@ class ItemDetailView(APIView):
     def get(self, req, id):
         item = Item.objects.filter(id=id).first()
         if item is None:
-            return Response({'error': 'Item not found'}, status=404)
+            return Response({'error': 'Item not found.'}, status=404)
         return Response(ItemSerializer(item).data)
 
     def put(self, req, id):
         if req.user.is_staff is False:
-            return Response({'error': 'Only admins allowed to edit items'},
+            return Response({'error': 'Only admins allowed to edit items.'},
                             status=401)
         item = Item.objects.filter(id=id).first()
         if item is None:
-            return Response({'error': 'Item not found'}, status=404)
+            return Response({'error': 'Item not found.'}, status=404)
         data = req.data
         serializer = ItemUpdateSerializer(item, data=data, partial=True)
         if serializer.is_valid():

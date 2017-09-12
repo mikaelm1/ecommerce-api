@@ -98,6 +98,8 @@ class BaseTests(APITestCase):
                 stripe_id='stripe_id',
             )
         card.save()
+        user.stripe_id = 'stripe_id'
+        user.save()
         return card
 
 

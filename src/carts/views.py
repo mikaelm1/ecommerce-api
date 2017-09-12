@@ -27,8 +27,6 @@ class CartDetailView(APIView):
     def get(self, req):
         user = req.user
         cart = user.cart
-        items = cart.item_set.all()
-        items = [i.id for i in items]
         return Response(cart.to_json())
 
 
@@ -43,10 +41,10 @@ class AddItemToCartView(APIView):
         d = req.data
         inv = ItemInventory.objects.filter(id=d.get('inventory_id')).first()
         if inv is None:
-            return Response({'error': 'Item not found.'}, status=404)
+            return Response({'detail': 'Item not found.'}, status=404)
         items = inv.item_set.filter(on_sale=True)
         if items.count() <= 0:
-            return Response({'error': 'Item is out of stock.'}, status=404)
+            return Response({'detail': 'Item is out of stock.'}, status=404)
         cart = req.user.cart
         item = items.first()
         item.cart = cart
@@ -100,13 +98,13 @@ class CheckoutView(APIView):
     def put(self, req):
         card = req.user.creditcard_set.first()
         if card is None:
-            return Response({'error':
+            return Response({'detail':
                              'User does not have a credit card on file.'},
                             status=400)
         cart = req.user.cart
         items = cart.item_set
         if items.count() < 1:
-            return Response({'error':
+            return Response({'detail':
                              'User does not have any items in their cart.'},
                             status=400)
         charge_amount = 0
@@ -141,5 +139,5 @@ class CheckoutView(APIView):
                 inv.save()
             items.clear()
         else:
-            return Response({'error': res}, status=400)
+            return Response({'detail': res}, status=400)
         return Response(cart.to_json())

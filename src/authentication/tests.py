@@ -5,12 +5,15 @@ from django.conf import settings
 from django.db.models import Q
 from .models import User
 from .tokens import account_activation_token
-from items.models import Item
+from items.models import Item, ItemInventory
+from carts.models import Cart
+from billings.models import CreditCard
 
 
 @override_settings(TESTING=True)
 class BaseTests(APITestCase):
-    def register_user(self, seed, is_staff=False):
+    def register_user(self, seed, is_staff=False, with_cart=False,
+                      email_verified=False):
         """
         Helper to create a user object.
         :param seed: int
@@ -21,7 +24,12 @@ class BaseTests(APITestCase):
         user.set_password('pass')
         if is_staff:
             user.is_staff = True
+        if email_verified:
+            user.email_verified = True
         user.save()
+        if with_cart:
+            cart = Cart(user=user)
+            cart.save()
         return user
 
     def user_by_identifier(self, ident):
@@ -46,6 +54,51 @@ class BaseTests(APITestCase):
         )
         item.save()
         return item
+
+    def create_inventory(self, amount=1):
+        """
+        Creates an ItemInventory instance and returns it.
+        """
+        inv = ItemInventory(amount=amount)
+        inv.save()
+        return inv
+
+    def add_item_to_inventory(self, inventory, item):
+        """
+        Adds an Item instance to an ItemInventory instance.
+        """
+        inventory.item_set.add(item)
+        inventory.amount = inventory.item_set.count()
+        inventory.save()
+
+    def add_items_to_cart(self, user, num_items=1):
+        """
+        Adds N number of items to user's cart.
+        """
+        cart = user.cart
+        inv = self.create_inventory(amount=0)
+        for i in range(num_items):
+            item = self.create_item(i, user)
+            item.cart = cart
+            item.on_sale = False
+            item.save()
+            self.add_item_to_inventory(inv, item)
+            cart.item_set.add(item)
+
+    def create_card(self, user):
+        """
+        Creates and returns a credit card for user.
+        """
+        card = CreditCard(
+                name='Visa',
+                last_four=1234,
+                exp_month=11,
+                exp_year=2020,
+                user=user,
+                stripe_id='stripe_id',
+            )
+        card.save()
+        return card
 
 
 class AuthenticationRoutesTests(BaseTests):

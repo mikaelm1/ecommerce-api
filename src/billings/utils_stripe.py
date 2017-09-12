@@ -73,7 +73,10 @@ class StripeWrapper:
         Update user's credit card.
         """
         if settings.TESTING:
-            return True, {}
+            card.exp_month = exp_month
+            card.exp_year = exp_year
+            card.save()
+            return True, card
         customer = stripe.Customer.retrieve(user.stripe_id)
         c = customer.sources.retrieve(card.stripe_id)
         if exp_month:

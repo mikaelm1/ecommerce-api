@@ -81,7 +81,7 @@ class CreditCardView(APIView):
     def get(self, req):
         cards = req.user.creditcard_set
         if cards.count() == 0:
-            return Response({'error':
+            return Response({'detail':
                              'User has not registered a credit card.'},
                             status=404)
         # User can only have on credit card on file. Added one-to-many in case
@@ -91,7 +91,7 @@ class CreditCardView(APIView):
     def put(self, req):
         cards = req.user.creditcard_set
         if cards.count() == 0:
-            return Response({'error':
+            return Response({'detail':
                              'User has not registered a credit card.'},
                             status=404)
         card = cards.first()
@@ -132,7 +132,7 @@ class ReceiptDetailView(APIView):
     def get(self, req, rid):
         receipt = PurchaseReceipt.objects.find_by_id(rid)
         if receipt.user != req.user:
-            return Response({'error': 'Can only view your own receipts.'},
+            return Response({'detail': 'Can only view your own receipts.'},
                             status=403)
         items = receipt.get_items()
         return Response({'receipt': PurchaseReceiptSerializer(receipt).data,

@@ -41,3 +41,40 @@ class BillingsRoutesTests(BaseTests):
         res = self.client.post(url, data)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(user.creditcard_set.count(), 1)
+
+    def test_cc_detail_no_cc(self):
+        url = '/billings/card'
+        user = self.register_user(1, email_verified=True)
+        self.auth_client(user)
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(res.data.get('detail'),
+                         'User has not registered a credit card.')
+    
+    def test_cc_detail_valid(self):
+        url = '/billings/card'
+        user = self.register_user(1, email_verified=True)
+        self.create_card(user)
+        self.auth_client(user)
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 200)
+
+    def test_edit_cc_no_cc(self):
+        url = '/billings/card'
+        user = self.register_user(1, email_verified=True)
+        self.auth_client(user)
+        res = self.client.put(url)
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(res.data.get('detail'),
+                         'User has not registered a credit card.')
+
+    def test_edit_cc_valid(self):
+        url = '/billings/card'
+        user = self.register_user(1, email_verified=True)
+        self.create_card(user)
+        self.auth_client(user)
+        data = {'exp_month': 2, 'exp_year': 3000}
+        res = self.client.put(url, data)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(user.creditcard_set.first().exp_month, 2)
+        self.assertEqual(user.creditcard_set.first().exp_year, 3000)

@@ -15,7 +15,7 @@ class ItemsView(APIView):
     """
     def get(self, req):
         items = Item.objects.filter(on_sale=True)
-        print(ItemSerializer(items, many=True))
+        # print(ItemSerializer(items, many=True))
         return Response({'items': ItemSerializer(items, many=True).data})
 
     def post(self, req):
@@ -30,7 +30,7 @@ class ItemsView(APIView):
             inv_id = None
         inv = ItemInventory.objects.filter(id=inv_id).first()
         if inv is None:
-            print('Inv is None')
+            # print('Inv is None')
             inv = ItemInventory.objects.create(amount=1)
         serializer = ItemCreateSerializer(data=data)
         if serializer.is_valid():

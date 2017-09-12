@@ -24,6 +24,13 @@ class BaseTests(APITestCase):
     def user_by_identifier(self, ident):
         return User.get_by_identifier(ident)
 
+    def auth_client(self, user):
+        """
+        Sets the Authenication header on the test client.
+        """
+        token = user.get_jwt_token()
+        self.client.credentials(HTTP_AUTHORIZATION='JWT ' + token)
+
 
 class AuthenticationRoutesTests(BaseTests):
     @classmethod

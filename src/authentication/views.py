@@ -19,9 +19,6 @@ class LoginView(APIView):
     post:
     Verify and return JWT token.
     """
-    # authentication_classes = (JSONWebTokenAuthentication,)
-    # permission_classes = (IsAuthenticated,)
-
     def post(self, req):
         data = req.data
         ident = data.get('identifier')
@@ -40,11 +37,6 @@ class LoginView(APIView):
             token = jwt_encode_handler(payload)
             return Response({'user': user.to_json(), 'token': token})
         return Response({'error': 'Invalid login credentials.'}, status=401)
-
-    # def get_serializer(self):
-    #     print('inside get serializer')
-    #     print(UserCreateSerializer.fields)
-    #     return UserCreateSerializer()
 
 
 class UserRegister(APIView):

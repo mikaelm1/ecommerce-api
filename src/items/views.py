@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.pagination import LimitOffsetPagination
 from .models import Item, ItemInventory
 from .serializers import (
     ItemSerializer, ItemCreateSerializer, ItemUpdateSerializer
@@ -14,9 +15,11 @@ class ItemsView(APIView):
     Create a new item. Add it to inventory.
     """
     def get(self, req):
-        items = Item.objects.filter(on_sale=True)
-        # print(ItemSerializer(items, many=True))
-        return Response({'items': ItemSerializer(items, many=True).data})
+        items = Item.objects.filter(on_sale=True).order_by('-date_posted')
+        paginator = LimitOffsetPagination()
+        paginated_receipts = paginator.paginate_queryset(items, req)
+        serialized = ItemSerializer(paginated_receipts, many=True).data
+        return Response({'items': serialized})
 
     def post(self, req):
         if req.user.is_staff is False:

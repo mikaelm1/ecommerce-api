@@ -70,6 +70,18 @@ class BaseTests(APITestCase):
         inventory.amount = inventory.item_set.count()
         inventory.save()
 
+    def add_items_to_cart(self, user, num_items=1):
+        """
+        Adds N number of items to user's cart.
+        """
+        cart = user.cart
+        for i in range(num_items):
+            item = self.create_item(i, user)
+            item.cart = cart
+            item.on_sale = False
+            item.save()
+            cart.item_set.add(item)
+
 
 class AuthenticationRoutesTests(BaseTests):
     @classmethod

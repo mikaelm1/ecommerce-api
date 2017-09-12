@@ -1,4 +1,5 @@
 from authentication.tests import BaseTests
+from items.models import Item
 
 
 class CartsRoutesTests(BaseTests):
@@ -67,3 +68,28 @@ class CartsRoutesTests(BaseTests):
         res = self.client.put(url, data)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(items_for_sale.count(), 0)
+
+    def test_clear_cart_valid(self):
+        url = '/carts/edit'
+        user = self.register_user(1, with_cart=True, email_verified=True)
+        self.auth_client(user)
+        self.add_items_to_cart(user, num_items=2)
+        self.assertEqual(user.cart.item_set.count(), 2)
+        res = self.client.delete(url)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(user.cart.item_set.count(), 0)
+
+    def test_edit_cart_valid(self):
+        url = '/carts/edit'
+        user = self.register_user(1, with_cart=True, email_verified=True)
+        self.auth_client(user)
+        self.add_items_to_cart(user, num_items=2)
+        self.assertEqual(user.cart.item_set.count(), 2)
+        item_to_remove = user.cart.item_set.first()
+        data = {'items': [item_to_remove.id]}
+        res = self.client.put(url, data)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(user.cart.item_set.count(), 1)
+        updated_item = Item.objects.filter(id=item_to_remove.id).first()
+        self.assertTrue(updated_item.on_sale)
+        self.assertIsNone(updated_item.cart)

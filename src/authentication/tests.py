@@ -8,11 +8,7 @@ from .tokens import account_activation_token
 
 
 @override_settings(TESTING=True)
-class AuthenticationRoutesTests(APITestCase):
-    @classmethod
-    def setUpClass(cls):
-        super(AuthenticationRoutesTests, cls).setUpClass()
-
+class BaseTests(APITestCase):
     def register_user(self, seed):
         """
         Helper to create a user object.
@@ -27,6 +23,12 @@ class AuthenticationRoutesTests(APITestCase):
 
     def user_by_identifier(self, ident):
         return User.get_by_identifier(ident)
+
+
+class AuthenticationRoutesTests(BaseTests):
+    @classmethod
+    def setUpClass(cls):
+        super(AuthenticationRoutesTests, cls).setUpClass()
 
     def test_register(self):
         user = self.register_user(1)
@@ -102,3 +104,17 @@ class AuthenticationRoutesTests(APITestCase):
         res = self.client.get(url)
         self.assertTrue(res.status_code, 400)
         self.assertTrue(res.data.get('error'), 'User email already verified.')
+
+
+class UserModelTests(BaseTests):
+    def test_user_email(self):
+        user = User(email='user@example.com', username='user',
+                    password='pass')
+        self.assertFalse(user.email_verified)
+
+    def test_get_by_identifier(self):
+        user = User.get_by_identifier('wrong')
+        self.assertIsNone(user)
+        user = self.register_user(1)
+        user = User.get_by_identifier(user.email)
+        self.assertIsNotNone(user)

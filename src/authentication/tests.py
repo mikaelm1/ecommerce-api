@@ -5,7 +5,7 @@ from django.conf import settings
 from django.db.models import Q
 from .models import User
 from .tokens import account_activation_token
-from items.models import Item
+from items.models import Item, ItemInventory
 from carts.models import Cart
 
 
@@ -53,6 +53,22 @@ class BaseTests(APITestCase):
         )
         item.save()
         return item
+
+    def create_inventory(self, amount=1):
+        """
+        Creates an ItemInventory instance and returns it.
+        """
+        inv = ItemInventory(amount=amount)
+        inv.save()
+        return inv
+
+    def add_item_to_inventory(self, inventory, item):
+        """
+        Adds an Item instance to an ItemInventory instance.
+        """
+        inventory.item_set.add(item)
+        inventory.amount = inventory.item_set.count()
+        inventory.save()
 
 
 class AuthenticationRoutesTests(BaseTests):

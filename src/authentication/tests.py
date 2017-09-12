@@ -5,11 +5,12 @@ from django.conf import settings
 from django.db.models import Q
 from .models import User
 from .tokens import account_activation_token
+from items.models import Item
 
 
 @override_settings(TESTING=True)
 class BaseTests(APITestCase):
-    def register_user(self, seed):
+    def register_user(self, seed, is_staff=False):
         """
         Helper to create a user object.
         :param seed: int
@@ -18,11 +19,33 @@ class BaseTests(APITestCase):
         email = '{}@example.com'.format(username)
         user = User(username=username, email=email)
         user.set_password('pass')
+        if is_staff:
+            user.is_staff = True
         user.save()
         return user
 
     def user_by_identifier(self, ident):
         return User.get_by_identifier(ident)
+
+    def auth_client(self, user):
+        """
+        Sets the Authenication header on the test client.
+        """
+        token = user.get_jwt_token()
+        self.client.credentials(HTTP_AUTHORIZATION='JWT ' + token)
+
+    def create_item(self, seed, seller, price=12.00):
+        """
+        Creates an Item instance and returns it.
+        """
+        item = Item(
+            title='Item{}'.format(seed),
+            notes='Some notes.',
+            seller=seller,
+            price=price
+        )
+        item.save()
+        return item
 
 
 class AuthenticationRoutesTests(BaseTests):

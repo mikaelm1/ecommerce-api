@@ -16,6 +16,10 @@ function clean_up() {
     docker-compose down
 }
 
+function run_tests() {
+    docker-compose exec web python src/manage.py test src
+}
+
 function help_menu() {
 cat << EOF
 Usage: ${0} (d | p | c | h)
@@ -24,6 +28,7 @@ OPTIONS:
     d|dev       Run development environment
     p|prod      Run production environment
     c|clean     Stop and clean docker containers
+    t|test      Run all test cases
     h|help      Show this message
 EOF
 }
@@ -37,6 +42,8 @@ elif [[ $1 == "dev" ]] || [[ $1 == "d" ]]; then
     run_dev
 elif [[ $1 == "clean" ]] || [[ $1 == "c" ]]; then
     clean_up
+elif [[ $1 == "test" ]] || [[ $1 == "t" ]]; then
+    run_tests
 else
     help_menu
 fi

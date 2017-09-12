@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.pagination import LimitOffsetPagination
 from .models import Item, ItemInventory
 from .serializers import (
     ItemSerializer, ItemCreateSerializer, ItemUpdateSerializer
@@ -14,9 +15,11 @@ class ItemsView(APIView):
     Create a new item. Add it to inventory.
     """
     def get(self, req):
-        items = Item.objects.filter(on_sale=True)
-        print(ItemSerializer(items, many=True))
-        return Response({'items': ItemSerializer(items, many=True).data})
+        items = Item.objects.filter(on_sale=True).order_by('-date_posted')
+        paginator = LimitOffsetPagination()
+        paginated_receipts = paginator.paginate_queryset(items, req)
+        serialized = ItemSerializer(paginated_receipts, many=True).data
+        return Response({'items': serialized})
 
     def post(self, req):
         if req.user.is_staff is False:
@@ -30,7 +33,7 @@ class ItemsView(APIView):
             inv_id = None
         inv = ItemInventory.objects.filter(id=inv_id).first()
         if inv is None:
-            print('Inv is None')
+            # print('Inv is None')
             inv = ItemInventory.objects.create(amount=1)
         serializer = ItemCreateSerializer(data=data)
         if serializer.is_valid():
@@ -53,16 +56,16 @@ class ItemDetailView(APIView):
     def get(self, req, id):
         item = Item.objects.filter(id=id).first()
         if item is None:
-            return Response({'error': 'Item not found'}, status=404)
+            return Response({'error': 'Item not found.'}, status=404)
         return Response(ItemSerializer(item).data)
 
     def put(self, req, id):
         if req.user.is_staff is False:
-            return Response({'error': 'Only admins allowed to edit items'},
+            return Response({'error': 'Only admins allowed to edit items.'},
                             status=401)
         item = Item.objects.filter(id=id).first()
         if item is None:
-            return Response({'error': 'Item not found'}, status=404)
+            return Response({'error': 'Item not found.'}, status=404)
         data = req.data
         serializer = ItemUpdateSerializer(item, data=data, partial=True)
         if serializer.is_valid():

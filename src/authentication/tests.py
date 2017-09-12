@@ -6,11 +6,13 @@ from django.db.models import Q
 from .models import User
 from .tokens import account_activation_token
 from items.models import Item
+from carts.models import Cart
 
 
 @override_settings(TESTING=True)
 class BaseTests(APITestCase):
-    def register_user(self, seed, is_staff=False):
+    def register_user(self, seed, is_staff=False, with_cart=False,
+                      email_verified=False):
         """
         Helper to create a user object.
         :param seed: int
@@ -21,7 +23,12 @@ class BaseTests(APITestCase):
         user.set_password('pass')
         if is_staff:
             user.is_staff = True
+        if email_verified:
+            user.email_verified = True
         user.save()
+        if with_cart:
+            cart = Cart(user=user)
+            cart.save()
         return user
 
     def user_by_identifier(self, ident):

@@ -27,8 +27,6 @@ class CartDetailView(APIView):
     def get(self, req):
         user = req.user
         cart = user.cart
-        items = cart.item_set.all()
-        items = [i.id for i in items]
         return Response(cart.to_json())
 
 

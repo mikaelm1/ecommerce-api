@@ -78,3 +78,36 @@ class BillingsRoutesTests(BaseTests):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(user.creditcard_set.first().exp_month, 2)
         self.assertEqual(user.creditcard_set.first().exp_year, 3000)
+
+    def test_billing_history_view(self):
+        url = '/billings/purchases'
+        user = self.register_user(1, email_verified=True, with_cart=True)
+        self.auth_client(user)
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(len(res.data.get('receipts')), 0)
+        self.create_receipt(user, 23)
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(len(res.data.get('receipts')), 1)
+
+    def test_receipt_detail_view_invalid(self):
+        url = '/billings/purchases/'
+        user = self.register_user(1, email_verified=True, with_cart=True)
+        receipt = self.create_receipt(user, 23)
+        user2 = self.register_user(2, email_verified=True, with_cart=True)
+        self.auth_client(user2)
+        url += '{}'.format(receipt.id)
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 403)
+        self.assertEqual(res.data.get('detail'),
+                         'Can only view your own receipts.')
+
+    def test_receipt_detail_valid(self):
+        url = '/billings/purchases/'
+        user = self.register_user(1, email_verified=True, with_cart=True)
+        receipt = self.create_receipt(user, 23)
+        self.auth_client(user)
+        url += '{}'.format(receipt.id)
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 200)

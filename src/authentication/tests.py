@@ -7,7 +7,7 @@ from .models import User
 from .tokens import account_activation_token
 from items.models import Item, ItemInventory
 from carts.models import Cart
-from billings.models import CreditCard
+from billings.models import CreditCard, PurchaseReceipt
 
 
 @override_settings(TESTING=True)
@@ -101,6 +101,19 @@ class BaseTests(APITestCase):
         user.stripe_id = 'stripe_id'
         user.save()
         return card
+    
+    def create_receipt(self, user, seed):
+        """
+        Creates and returns a PurchaseReceipt instance for user.
+        """
+        receipt = PurchaseReceipt(
+            user=user, brand='{}{}'.format(user, seed), last_four=1234,
+            exp_month=10, exp_year=2020,
+            currency='usd', amount=1080,
+            stripe_id='test_stripe_id'
+        )
+        receipt.save()
+        return receipt
 
 
 class AuthenticationRoutesTests(BaseTests):

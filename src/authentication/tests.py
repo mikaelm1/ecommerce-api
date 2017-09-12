@@ -5,6 +5,7 @@ from django.conf import settings
 from django.db.models import Q
 from .models import User
 from .tokens import account_activation_token
+from items.models import Item
 
 
 @override_settings(TESTING=True)
@@ -30,6 +31,19 @@ class BaseTests(APITestCase):
         """
         token = user.get_jwt_token()
         self.client.credentials(HTTP_AUTHORIZATION='JWT ' + token)
+
+    def create_item(self, seed, seller, price=12.00):
+        """
+        Creates an Item instance and returns it.
+        """
+        item = Item(
+            title='Item{}'.format(seed),
+            notes='Some notes.',
+            seller=seller,
+            price=price
+        )
+        item.save()
+        return item
 
 
 class AuthenticationRoutesTests(BaseTests):

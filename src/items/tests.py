@@ -47,3 +47,18 @@ class ItemsRoutesTests(BaseTests):
         self.assertEqual(inv.count(), 1)
         # Item must be in newly created inventory
         self.assertTrue(items.first().inventory == inv.first())
+
+    def test_items_index_no_items(self):
+        url = '/items/'
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(len(res.data.get('items')), 0)
+
+    def test_itmes_index_with_items(self):
+        user = self.register_user(1)
+        item = self.create_item(1, user)
+        url = '/items/'
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(len(res.data.get('items')), 1)
+        self.assertEqual(res.data.get('items')[0].get('id'), item.id)

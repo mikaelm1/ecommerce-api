@@ -28,6 +28,8 @@ SECRET_KEY = '_9t@h*@jv9lyf7)i)&f*)0-^xptuy!h(%q_vuen=7fso9#lba9'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+TESTING = False
+
 ALLOWED_HOSTS = []
 
 
@@ -117,6 +119,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = 'authentication.User'
 
+# DRF stuff ====================================================
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
@@ -127,12 +130,18 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle'
     ),
-    'DEFAULT_THROTTLE_RATES': {
-        'anon': '3/second',
-        'user': '3/second'
-    },
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
 }
+if DEBUG:  # for running unit tests
+    REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {
+        'anon': '1000/second',
+        'user': '1000/second'
+    }
+else:
+    REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {
+        'anon': '3/second',
+        'user': '3/second'
+    }
 
 JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=864000),
@@ -141,6 +150,7 @@ JWT_AUTH = {
 SWAGGER_SETTINGS = {
     'JSON_EDITOR': True
 }
+# DRF stuff ====================================================
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/

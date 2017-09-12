@@ -12,3 +12,13 @@ class User(AbstractUser):
             'username': self.username,
         }
         return res
+
+    @classmethod
+    def get_by_identifier(self, identifier):
+        """
+        Find User by either email or username.
+        """
+        return self.objects.filter(
+                    models.Q(username=identifier) |
+                    models.Q(email=identifier)
+                ).first()

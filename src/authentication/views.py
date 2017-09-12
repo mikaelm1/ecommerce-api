@@ -53,16 +53,17 @@ class UserRegister(APIView):
         if user:
             return Response({'error':
                              'An account with that email already exists.'},
-                            status=404)
+                            status=409)
         user = User.objects.filter(username=username)
         if user:
             return Response({'error':
                              'An account with that username already exists.'},
-                            status=404)
+                            status=409)
         if len(pwd) < settings.MIN_PASSWORD_LENGTH:
             return Response({'error':
                              'Password must be at least {} characters long'
-                             .format(settings.MIN_PASSWORD_LENGTH)})
+                             .format(settings.MIN_PASSWORD_LENGTH)},
+                             status=411)
         user = User.objects.create_user(username=username, email=email,
                                         password=pwd)
         if user is None:

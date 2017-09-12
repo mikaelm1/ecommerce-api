@@ -79,6 +79,8 @@ class StripeWrapper:
         """
         Charge a user's credit card for a given amount.
         """
+        if settings.TESTING:
+            return True, {'id': 'stripe_id'}
         charge = stripe.Charge.create(
             amount=amount,
             currency=currency,

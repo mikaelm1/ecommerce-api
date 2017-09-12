@@ -1,5 +1,6 @@
 from authentication.tests import BaseTests
 from items.models import Item
+from billings.models import PurchaseReceipt
 
 
 class CartsRoutesTests(BaseTests):
@@ -43,7 +44,7 @@ class CartsRoutesTests(BaseTests):
         self.auth_client(user)
         res = self.client.put(url, data)
         self.assertEqual(res.status_code, 404)
-        self.assertEqual(res.data.get('error'), 'Item not found.')
+        self.assertEqual(res.data.get('detail'), 'Item not found.')
 
     def test_add_to_cart_empty_inventory(self):
         user = self.register_user(1, with_cart=True, email_verified=True)
@@ -53,7 +54,7 @@ class CartsRoutesTests(BaseTests):
         self.auth_client(user)
         res = self.client.put(url, data)
         self.assertEqual(res.status_code, 404)
-        self.assertEqual(res.data.get('error'), 'Item is out of stock.')
+        self.assertEqual(res.data.get('detail'), 'Item is out of stock.')
 
     def test_add_to_cart_valid(self):
         user = self.register_user(1, with_cart=True, email_verified=True)
@@ -93,3 +94,33 @@ class CartsRoutesTests(BaseTests):
         updated_item = Item.objects.filter(id=item_to_remove.id).first()
         self.assertTrue(updated_item.on_sale)
         self.assertIsNone(updated_item.cart)
+
+    def test_checkout_no_card(self):
+        url = '/carts/checkout'
+        user = self.register_user(1, email_verified=True)
+        self.auth_client(user)
+        res = self.client.put(url)
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.data.get('detail'),
+                         'User does not have a credit card on file.')
+    
+    def test_checkout_no_items(self):
+        url = '/carts/checkout'
+        user = self.register_user(1, email_verified=True, with_cart=True)
+        self.create_card(user)
+        self.auth_client(user)
+        res = self.client.put(url)
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.data.get('detail'),
+                         'User does not have any items in their cart.')
+
+    def test_checkout_valid(self):
+        url = '/carts/checkout'
+        user = self.register_user(1, email_verified=True, with_cart=True)
+        self.assertEqual(user.purchasereceipt_set.count(), 0)
+        self.create_card(user)
+        self.add_items_to_cart(user, num_items=2)
+        self.auth_client(user)
+        res = self.client.put(url)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(user.purchasereceipt_set.count(), 1)

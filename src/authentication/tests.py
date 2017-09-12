@@ -7,6 +7,7 @@ from .models import User
 from .tokens import account_activation_token
 from items.models import Item, ItemInventory
 from carts.models import Cart
+from billings.models import CreditCard
 
 
 @override_settings(TESTING=True)
@@ -75,12 +76,29 @@ class BaseTests(APITestCase):
         Adds N number of items to user's cart.
         """
         cart = user.cart
+        inv = self.create_inventory(amount=0)
         for i in range(num_items):
             item = self.create_item(i, user)
             item.cart = cart
             item.on_sale = False
             item.save()
+            self.add_item_to_inventory(inv, item)
             cart.item_set.add(item)
+
+    def create_card(self, user):
+        """
+        Creates and returns a credit card for user.
+        """
+        card = CreditCard(
+                name='Visa',
+                last_four=1234,
+                exp_month=11,
+                exp_year=2020,
+                user=user,
+                stripe_id='stripe_id',
+            )
+        card.save()
+        return card
 
 
 class AuthenticationRoutesTests(BaseTests):

@@ -42,6 +42,16 @@ class StripeWrapper:
         """
         Create a Stripe customer with a credit card.
         """
+        if settings.TESTING:
+            res = {
+                'customer_id': 'cid',
+                'card_id': 'id',
+                'name': 'brand',
+                'exp_month': 10,
+                'exp_year': 2020,
+                'last_four': 1234,
+            }
+            return True, res
         customer = stripe.Customer.create(
             description='Customer for {}'.format(user.email),
             source=token
@@ -62,6 +72,11 @@ class StripeWrapper:
         """
         Update user's credit card.
         """
+        if settings.TESTING:
+            card.exp_month = exp_month
+            card.exp_year = exp_year
+            card.save()
+            return True, card
         customer = stripe.Customer.retrieve(user.stripe_id)
         c = customer.sources.retrieve(card.stripe_id)
         if exp_month:

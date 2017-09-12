@@ -1,16 +1,10 @@
 from rest_framework.views import APIView
-from rest_framework.compat import coreapi, coreschema
-from rest_framework import generics
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework_jwt.authentication import JSONWebTokenAuthentication
-from rest_framework_jwt.settings import api_settings
 from django.db.models import Q
 from django.conf import settings
 from .models import User
 from .tasks import send_acct_confirm_email
 from .tokens import account_activation_token
-from .serializers import UserCreateSerializer
 from carts.models import Cart
 
 
@@ -31,10 +25,7 @@ class LoginView(APIView):
             return Response({'error': 'Your email is not verified.'},
                             status=401)
         if user and user.check_password(pwd):
-            jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
-            jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
-            payload = jwt_payload_handler(user)
-            token = jwt_encode_handler(payload)
+            token = user.get_jwt_token()
             return Response({'user': user.to_json(), 'token': token})
         return Response({'error': 'Invalid login credentials.'}, status=401)
 
@@ -63,7 +54,7 @@ class UserRegister(APIView):
             return Response({'error':
                              'Password must be at least {} characters long'
                              .format(settings.MIN_PASSWORD_LENGTH)},
-                             status=411)
+                              status=411)
         user = User.objects.create_user(username=username, email=email,
                                         password=pwd)
         if user is None:

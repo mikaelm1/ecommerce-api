@@ -90,7 +90,6 @@ class ConfirmAccountView(APIView):
             uid = int(int(req.GET.get('uid')) / settings.EMAIL_CONFIRM_HASH_NUM)
         except TypeError:
             return Response({'error': 'uid must be an integer.'}, status=400)
-        print(token, uid)
         if token and uid:
             user = User.objects.filter(id=uid).first()
             if user is None:
@@ -124,45 +123,3 @@ class ResendConfirmEmailView(APIView):
             url += '?token={}&uid={}'.format(token, uid)
             send_acct_confirm_email.delay(user.id, url)
             return Response({'message': 'Confirmation email sent.'})
-
-
-# class ConfirmAcct(View):
-#     def get(self, req):
-#         confirmed = False
-#         token = req.GET.get('token')
-#         uid = int(float(req.GET.get('uid')) / settings.EMAIL_CONFIRM_HASH_NUM)
-#         if token and uid:
-#             user = User.objects.filter(id=uid).first()
-#             if user is None:
-#                 confirmed = False
-#             elif user.email_verified:
-#                 print('Email is already verified')
-#                 confirmed = True
-#             else:
-#                 if account_activation_token.check_token(user, token):
-#                     user.email_verified = True
-#                     user.save()
-#                     confirmed = True
-#         return render(req, 'auth/confirm.html',
-#                       {'confirmed': confirmed, 'uid': uid})
-
-
-# class ResendConfirmEmail(View):
-#     def get(self, req, *args):
-#         # TODO: redirect to front end app
-#         uid = req.GET.get('uid')
-#         user = User.objects.filter(id=uid).first()
-#         print(uid)
-#         print(user)
-#         if user is None:
-#             print('User not found')
-#         elif user.email_verified:
-#             print('email already confirmed')
-#             return redirect('/')
-#         else:
-#             url = req.build_absolute_uri('/auth/confirm-email')
-#             uid = user.id * settings.EMAIL_CONFIRM_HASH_NUM
-#             token = account_activation_token.make_token(user)
-#             url += '?token={}&uid={}'.format(token, uid)
-#             send_acct_confirm_email.delay(user.id, url)
-#         return redirect('/')

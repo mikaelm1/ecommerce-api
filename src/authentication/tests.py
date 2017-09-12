@@ -4,6 +4,7 @@ from rest_framework import status
 from django.conf import settings
 from django.db.models import Q
 from .models import User
+from .tokens import account_activation_token
 
 
 @override_settings(TESTING=True)
@@ -71,3 +72,33 @@ class AuthenticationRoutesTests(APITestCase):
         res = self.client.post(url, data)
         self.assertEqual(res.status_code, 200)
         self.assertTrue(res.data.get('token'))
+
+    def test_confirm_acct(self):
+        url = '/auth/confirm-account/'
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.data.get('error'), 'uid must be an integer.')
+        user = self.register_user(1)
+        url += '?uid={}'.format(user.id * settings.EMAIL_CONFIRM_HASH_NUM)
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.data.get('error'), 'Invalid request data.')
+        token = account_activation_token.make_token(user)
+        url += '&token={}'.format(token)
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 200)
+
+    def test_resend_confirm_email(self):
+        url = '/auth/resend-email/'
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(res.data.get('error'), 'Invalid user id.')
+        user = self.register_user(1)
+        url += '?uid={}'.format(user.id * settings.EMAIL_CONFIRM_HASH_NUM)
+        res = self.client.get(url)
+        self.assertTrue(res.status_code, 200)
+        user.email_verified = True
+        user.save()
+        res = self.client.get(url)
+        self.assertTrue(res.status_code, 400)
+        self.assertTrue(res.data.get('error'), 'User email already verified.')

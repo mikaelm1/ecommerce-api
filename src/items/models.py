@@ -50,7 +50,7 @@ class Item(models.Model):
             'seller': self.seller.id,
             'buyer': self.buyer.id if self.buyer else None,
             'cart': self.cart.id if self.cart else None,
-            'inventory': self.inventory.id,
+            'inventory': self.inventory.id if self.inventory else None,
         }
         return res
 

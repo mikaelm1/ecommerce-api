@@ -2,6 +2,67 @@ from authentication.tests import BaseTests
 from .models import Item, ItemInventory
 
 
+class ItemImageTests(BaseTests):
+    def test_create_image_invalid(self):
+        url = '/items/item-image/100'
+        user = self.register_user(1, is_staff=True)
+        self.auth_client(user)
+        res = self.client.post(url)
+        self.assertEqual(res.status_code, 404)
+
+    def test_create_image_valid(self):
+        user = self.register_user(1, is_staff=True)
+        item = self.create_item(1, user)
+        url = '/items/item-image/{}'.format(item.id)
+        self.auth_client(user)
+        data = {'location': 'url_to_image'}
+        res = self.client.post(url, data)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(item.itemimage_set.first().location, data['location'])
+
+    def test_edit_image_invalid(self):
+        url = '/items/item-image/100'
+        res = self.client.put(url)
+        self.assertEqual(res.status_code, 401)
+        user = self.register_user(1, is_staff=True)
+        self.auth_client(user)
+        res = self.client.put(url)
+        self.assertEqual(res.status_code, 404)
+
+    def test_edit_image_valid(self):
+        user = self.register_user(1, is_staff=True)
+        item = self.create_item(1, user)
+        image = self.create_image(item=item, location='first')
+        url = '/items/item-image/{}'.format(image.id)
+        self.auth_client(user)
+        data = {'location': 'new'}
+        res = self.client.put(url, data)
+        self.assertEqual(res.status_code, 200)
+        image = self.image_by_id(image.id)
+        self.assertEqual(image.location, data['location'])
+
+    def test_delete_image_invalid(self):
+        user = self.register_user(1, is_staff=True)
+        item = self.create_item(1, user)
+        image = self.create_image(item=item, location='path')
+        url = '/items/item-image/{}'.format(image.id)
+        res = self.client.delete(url)
+        self.assertEqual(res.status_code, 401)
+        self.auth_client(user)
+        url = '/items/item-image/100'
+        res = self.client.delete(url)
+        self.assertEqual(res.status_code, 404)
+
+    def test_delete_image_valid(self):
+        user = self.register_user(1, is_staff=True)
+        item = self.create_item(1, user)
+        image = self.create_image(item=item, location='path')
+        url = '/items/item-image/{}'.format(image.id)
+        self.auth_client(user)
+        res = self.client.delete(url)
+        self.assertEqual(res.status_code, 204)
+
+
 class ItemsRoutesTests(BaseTests):
     def test_item_create_non_admin(self):
         url = '/items/'
@@ -35,7 +96,8 @@ class ItemsRoutesTests(BaseTests):
         data = {
             'title': 'Item1',
             'notes': 'Some notes about item.',
-            'price': 20.25
+            'price': 20.25,
+            'images': ['url_to_image']
         }
         self.auth_client(user)
         res = self.client.post(url, data)
@@ -43,6 +105,7 @@ class ItemsRoutesTests(BaseTests):
         # Should be 1 item and 1 inventory in db now
         items = Item.objects.all()
         self.assertEqual(items.count(), 1)
+        self.assertEqual(items.first().itemimage_set.count(), 1)
         inv = ItemInventory.objects.all()
         self.assertEqual(inv.count(), 1)
         # Item must be in newly created inventory
@@ -67,7 +130,7 @@ class ItemsRoutesTests(BaseTests):
         url = '/items/item/100'
         res = self.client.get(url)
         self.assertEqual(res.status_code, 404)
-    
+
     def test_item_detail_valid(self):
         user = self.register_user(1)
         item = self.create_item(1, user)

@@ -92,12 +92,12 @@ class ItemImageView(APIView):
     permission_classes = (IsAdminUser, )
 
     def put(self, req, id):
-        location = req.data.get('location')
         image = ItemImage.objects.filter(id=id).first()
-        image.location = location
-        image.save()
         if image is None:
             return Response({'detail': 'Image not found.'}, status=404)
+        location = req.data.get('location')
+        image.location = location
+        image.save()
         return Response(ItemImageSerializer(image).data)
 
     def post(self, req, id):

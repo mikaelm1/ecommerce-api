@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.pagination import LimitOffsetPagination
-from .models import Item, ItemInventory
+from .models import Item, ItemInventory, ItemImage
 from .serializers import (
     ItemSerializer, ItemCreateSerializer, ItemUpdateSerializer
 )
@@ -17,8 +17,9 @@ class ItemsView(APIView):
     def get(self, req):
         items = Item.objects.filter(on_sale=True).order_by('-date_posted')
         paginator = LimitOffsetPagination()
-        paginated_receipts = paginator.paginate_queryset(items, req)
-        serialized = ItemSerializer(paginated_receipts, many=True).data
+        paginated_items = paginator.paginate_queryset(items, req)
+        # serialized = ItemSerializer(paginated_items, many=True).data
+        serialized = [i.to_json() for i in paginated_items]
         return Response({'items': serialized})
 
     def post(self, req):
@@ -33,7 +34,6 @@ class ItemsView(APIView):
             inv_id = None
         inv = ItemInventory.objects.filter(id=inv_id).first()
         if inv is None:
-            # print('Inv is None')
             inv = ItemInventory.objects.create(amount=1)
         serializer = ItemCreateSerializer(data=data)
         if serializer.is_valid():
@@ -41,8 +41,14 @@ class ItemsView(APIView):
             inv.item_set.add(serializer.instance)
             inv.amount = inv.item_set.count()
             inv.save()
-            return Response(ItemSerializer(serializer.instance).data,
-                            status=201)
+            images = data.get('images', [])
+            if len(images) > 0:
+                for i in images:
+                    img = ItemImage(location=i, item=serializer.instance)
+                    img.save()
+            return Response(serializer.instance.to_json(), status=201)
+            # return Response(ItemSerializer(serializer.instance).data,
+            #                 status=201)
         return Response({'errors': serializer.errors}, status=400)
 
 

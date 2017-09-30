@@ -1,9 +1,11 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.permissions import IsAdminUser
 from .models import Item, ItemInventory, ItemImage
 from .serializers import (
-    ItemSerializer, ItemCreateSerializer, ItemUpdateSerializer
+    ItemSerializer, ItemCreateSerializer, ItemUpdateSerializer,
+    ItemImageSerializer
 )
 
 
@@ -47,23 +49,21 @@ class ItemsView(APIView):
                     img = ItemImage(location=i, item=serializer.instance)
                     img.save()
             return Response(serializer.instance.to_json(), status=201)
-            # return Response(ItemSerializer(serializer.instance).data,
-            #                 status=201)
         return Response({'errors': serializer.errors}, status=400)
 
 
 class ItemDetailView(APIView):
     """
     get:
-    Returns an item details
+    Returns an item details.
     put:
-    Update an item
+    Update an item.
     """
     def get(self, req, id):
         item = Item.objects.filter(id=id).first()
         if item is None:
             return Response({'error': 'Item not found.'}, status=404)
-        return Response(ItemSerializer(item).data)
+        return Response(item.to_json())
 
     def put(self, req, id):
         if req.user.is_staff is False:
@@ -78,3 +78,47 @@ class ItemDetailView(APIView):
             serializer.save()
             return Response(ItemSerializer(item).data)
         return Response({'errors': serializer.errors}, status=400)
+
+
+class ItemImageView(APIView):
+    """
+    put:
+    Update an item's image.
+    post:
+    Create an image for an item.
+    delete:
+    Delete an item's image.
+    """
+    permission_classes = (IsAdminUser, )
+
+    def put(self, req, id):
+        location = req.data.get('location')
+        image = ItemImage.objects.filter(id=id).first()
+        image.location = location
+        image.save()
+        if image is None:
+            return Response({'detail': 'Image not found.'}, status=404)
+        return Response(ItemImageSerializer(image).data)
+
+    def post(self, req, id):
+        # the id is the id of the item
+        item = Item.objects.filter(id=id).first()
+        if item is None:
+            return Response({'detail': 'Item not found.'}, status=404)
+        if item.itemimage_set.count() >= 5:
+            msg = 'Unable to add image to item. Item already has 5 images.'
+            return Response({'detail': msg}, status=400)
+        d = req.data
+        d['item'] = item.id
+        serializer = ItemImageSerializer(data=req.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(ItemImageSerializer(serializer.instance).data)
+        return Response({'errors': serializer.errors}, status=400)
+
+    def delete(self, req, id):
+        image = ItemImage.objects.filter(id=id).first()
+        if image is None:
+            return Response({'detail': 'Image not found.'}, status=404)
+        image.delete()
+        return Response({}, status=204)

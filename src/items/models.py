@@ -41,7 +41,7 @@ class Item(models.Model):
     def to_json(self):
         res = {
             'id': self.id,
-            'images': [i.location for i in self.itemimage_set.all()],
+            'images': [i.to_json() for i in self.itemimage_set.all()],
             'title': self.title,
             'notes': self.notes,
             'date_posted': self.date_posted,
@@ -66,7 +66,7 @@ class ItemImage(models.Model):
         return 'Image for item {}'.format(self.item.title)
 
     def to_json(self):
-        return {'location': self.location}
+        return {'location': self.location, 'id': self.id}
 
 
 class PurchasedItem(models.Model):

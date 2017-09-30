@@ -8,6 +8,9 @@ from .models import User
 
 @celery_app.task
 def send_acct_confirm_email(uid, url):
+    if settings.TESTING:
+        print('TESTING mode. Not sending email.')
+        return
     print('Sending account confirmation email')
     user = User.objects.filter(id=uid).first()
     if user is None:

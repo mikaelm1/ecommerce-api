@@ -1,5 +1,4 @@
 FROM python:3.6-slim
-MAINTAINER Mikael Mukhsikaroyan <mikaelm3981@gmail.com>
 
 RUN apt-get update && apt-get install -qq -y \
   build-essential libpq-dev --no-install-recommends

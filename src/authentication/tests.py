@@ -5,7 +5,7 @@ from django.conf import settings
 from django.db.models import Q
 from .models import User
 from .tokens import account_activation_token
-from items.models import Item, ItemInventory
+from items.models import Item, ItemInventory, ItemImage
 from carts.models import Cart
 from billings.models import CreditCard, PurchaseReceipt
 
@@ -55,6 +55,17 @@ class BaseTests(APITestCase):
         item.save()
         return item
 
+    def create_image(self, item, location=''):
+        """
+        Creates an ItemImage and returns it.
+        """
+        image = ItemImage(location=location, item=item)
+        image.save()
+        return image
+
+    def image_by_id(self, id):
+        return ItemImage.objects.filter(id=id).first()
+
     def create_inventory(self, amount=1):
         """
         Creates an ItemInventory instance and returns it.
@@ -101,7 +112,7 @@ class BaseTests(APITestCase):
         user.stripe_id = 'stripe_id'
         user.save()
         return card
-    
+
     def create_receipt(self, user, seed):
         """
         Creates and returns a PurchaseReceipt instance for user.

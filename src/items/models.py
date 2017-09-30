@@ -38,6 +38,36 @@ class Item(models.Model):
         """
         return int(self.price * 100)
 
+    def to_json(self):
+        res = {
+            'id': self.id,
+            'images': [i.to_json() for i in self.itemimage_set.all()],
+            'title': self.title,
+            'notes': self.notes,
+            'date_posted': self.date_posted,
+            'price': self.price,
+            'on_sale': self.on_sale,
+            'seller': self.seller.id,
+            'buyer': self.buyer.id if self.buyer else None,
+            'cart': self.cart.id if self.cart else None,
+            'inventory': self.inventory.id if self.inventory else None,
+        }
+        return res
+
+
+class ItemImage(models.Model):
+    location = models.CharField(max_length=255, blank=False, null=False)
+    item = models.ForeignKey(Item, blank=False, null=False)
+
+    class Meta:
+        db_table = 'item_images'
+
+    def __str__(self):
+        return 'Image for item {}'.format(self.item.title)
+
+    def to_json(self):
+        return {'location': self.location, 'id': self.id}
+
 
 class PurchasedItem(models.Model):
     TRANSIT_STATUS = (

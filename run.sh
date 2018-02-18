@@ -2,13 +2,11 @@
 function run_dev() {
     echo "Starting development project..."
     docker-compose down
-    docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+    docker-compose up --build
 }
 
 function run_prod() {
-    echo "Starting production project..."
-    docker-compose down
-    docker-compose -f docker-compose.yml -f docker-compose.prod.yml up --build
+    echo "Production not implemented..."
 }
 
 function clean_up() {

@@ -26,6 +26,7 @@ notes.txt
 src/ecommerce/settings/prod.py
 src/ecommerce/settings/dev.py
 docker-compose.prod.yml
+deploy/*
 # The static folder created from: `manage.py collectstatic`
 static/*
 
